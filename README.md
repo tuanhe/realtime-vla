@@ -24,7 +24,7 @@ converted_checkpoint = pickle.load(open('converted_checkpoint.pkl', 'rb'))
 from pi0_infer import Pi0Inference
 
 infer = Pi0Inference(converted_checkpoint, number_of_images, length_of_trajectory)
-infer.forward(
+output_actions = infer.forward(
    normalized_observation_image_bfloat16, # (number_of_images, 3, 224, 224)
    observation_state_bfloat16, # (32,)
    diffusion_input_noise_bfloat16, # (length_of_trajectory, 32)
