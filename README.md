@@ -35,7 +35,7 @@ pip install -e .
 
 ## Usage
 
-### S1: Weight Conversion
+### 1: Weight Conversion
 
 First, convert Pi0 JAX model weights to PyTorch format. The weight conversion functionality is integrated in the example code, including:
 
@@ -52,7 +52,7 @@ torch_weights/
 
 Refer to the `_load_weights_from_params` method in `convert_weights.py` for weight mapping logic.
 
-### Step 2: Model Inference
+### 2: Model Inference
 
 The project provides a `Pi0Inference` class that serves as a drop-in replacement for the original Pi0 inference interface:
 
@@ -83,7 +83,7 @@ action_output = result['action_output']  # Predicted action sequence
 elapsed_time = result['elapsed']          # Inference time (milliseconds)
 ```
 
-### Step 3: Performance Testing
+### 3: Performance Testing
 
 Use the `test.py` script for model performance testing:
 
