@@ -3,7 +3,7 @@
 This project provides accelerated inference kernels of the Pi0 model from [OpenPI](https://github.com/Physical-Intelligence/openpi) project.
 
 ![Real-time VLA Inference Demo](./images/realdemo.png)
-*Real-world demonstration: catching a falling pen with sub-200ms end-to-end latency using 30 FPS inference. (From "[Running VLAs at Real-time Speed]()")*
+*Real-world demonstration: catching a falling pen with sub-200ms end-to-end latency using 30 FPS inference. (From "[Running VLAs at Real-time Speed](https://dexmal.com/docs/RT-VLA_Tech_Report.pdf)")*
 
 
 The inference time for one set of observations (10 flow steps, 63 chunk size, empty prompt) on RTX 4090 (max boosted clock 2.79GHz) is as follows:
@@ -53,12 +53,12 @@ You can check the inference time on you local machine by
 python3 benchmark.py --num_views 2 --prompt_len 0 --chunk_size 63
 ```
 
-## Model Architecture
+## Structure of the Code
 
-The model consists of a vision encoder, an LLM, and an action expert. All components can be decomposed into a series of matrix multiplications(matmuls) and associated scalar operations. The computation graph ultimately simplifies to 24 GEMM-like operations with associated scalar operators. 
+The implementation is organized into three main components: a vision encoder, an LLM, and an action expert. Each component is decomposed into fundamental operations, with the entire computation graph simplified to 24 GEMM-like operations and associated scalar operators. This modular structure allows for efficient Triton kernel optimization at each computational stage.
 
-
-![Model Architecture](./images/matflow.png)
+![Computation Graph](./images/matflow.png)
+*Simplified computation graph showing the 24 GEMM-like operations that constitute the core of the inference pipeline.*
 
 
 
