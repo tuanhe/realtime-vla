@@ -20,7 +20,7 @@ if __name__ == "__main__":
         }
     }, num_views=args.num_views, chunk_size=args.chunk_size)
 
-    input_image = torch.randn(args.num_views, 3, 224, 224, dtype = torch.bfloat16).cuda()
+    input_image = torch.randn(args.num_views, 224, 224, 3, dtype = torch.bfloat16).cuda()
     input_state = torch.randn(32, dtype = torch.bfloat16).cuda()
     input_noise = torch.randn(args.chunk_size, 32, dtype = torch.bfloat16).cuda()
 

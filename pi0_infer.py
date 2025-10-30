@@ -347,11 +347,10 @@ def merge_split_k_bias_res(out_ptr, bias_ptr, res_ptr, final_out_ptr, seq_len : 
 
 def conv2d_embed_n256_1152_res(images, patch_w, patch_b, pos_emb, out):
     nviews = images.shape[0]
-    img_input = images.view(nviews, 3, 16, 14, 16, 14).permute(0, 2, 4, 1, 3, 5).contiguous()
-    patch_w_t = patch_w.view(1152, 3 * 14 * 14).transpose(1, 0).contiguous()
+    img_input = images.view(nviews, 16, 14, 16, 14, 3).permute(0, 1, 3, 2, 4, 5).contiguous()
     matmul_small_bias_res_mod[(256 * nviews // 64) * (1152 // 64),](
         img_input,
-        patch_w_t,
+        patch_w,
         out,
         patch_b,
         pos_emb,
@@ -1243,7 +1242,7 @@ class Pi0Inference:
         self.prompt_len = len(encoded_prompt)
 
         self.weights = {
-            "vision_patch_embedding_w":           torch.empty(1152, 3, 14, 14,        dtype = torch.bfloat16, device = "cuda") * 0.01,
+            "vision_patch_embedding_w":           torch.empty(14, 14, 3, 1152,        dtype = torch.bfloat16, device = "cuda") * 0.01,
             "vision_patch_embedding_b":           torch.empty(1152,                   dtype = torch.bfloat16, device = "cuda") * 0.01,
             "vision_position_embedding":          torch.empty(256, 1152,              dtype = torch.bfloat16, device = "cuda") * 0.01,
             "vision_attn_qkv_w":                  torch.empty(27, 1152, 3 * 1152,     dtype = torch.bfloat16, device = "cuda") * 0.01,
@@ -1288,7 +1287,7 @@ class Pi0Inference:
         decoder_seq_len = chunk_size + 1
 
         self.buffers = {
-            'observation_images_normalized':      torch.empty(num_views, 3, 224, 224,          dtype=torch.bfloat16,   device = "cuda"),
+            'observation_images_normalized':      torch.empty(num_views, 224, 224,3,           dtype=torch.bfloat16,   device = "cuda"),
             'observation_state_normalized':       torch.empty(32,                              dtype = torch.bfloat16, device = "cuda"),
             'diffusion_noise':                    torch.empty(chunk_size, 32,                  dtype = torch.bfloat16, device = "cuda"),
             'vision_x':                           torch.empty(num_views, 256, 1152,            dtype = torch.bfloat16, device = "cuda"),
