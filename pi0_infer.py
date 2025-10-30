@@ -1268,7 +1268,7 @@ class Pi0Inference:
             "encoder_ffn_up_w":                   torch.empty(18, 2048, 16384,        dtype = torch.bfloat16, device = "cuda") * 0.01,
             "encoder_ffn_down_w":                 torch.empty(18, 16384, 2048,        dtype = torch.bfloat16, device = "cuda") * 0.01,
 
-            "decoder_state_in_proj_w":            torch.empty(1024, 32,               dtype = torch.bfloat16, device = "cuda") * 0.01,
+            "decoder_state_in_proj_w":            torch.empty(32, 1024,               dtype = torch.bfloat16, device = "cuda") * 0.01,
             "decoder_state_in_proj_b":            torch.empty(1024,                   dtype = torch.bfloat16, device = "cuda") * 0.01,
             "decoder_action_fused_in_proj_w":     torch.empty(32, 1024,               dtype = torch.bfloat16, device = "cuda") * 0.01,
             "decoder_action_fused_time_biases":   torch.empty(10, 1024,               dtype = torch.bfloat16, device = "cuda") * 0.01,
