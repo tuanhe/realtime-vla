@@ -36,12 +36,12 @@ output_actions = infer.forward(
 )
 ```
 
-where you should first convert your JAX checkpoint to the required weight buffers by
 ```bash
 python3 convert_from_jax.py \
    --jax_path /path/to/checkpoint/folder\
    --output converted_checkpoint.pkl\
    --prompt "your task prompt"
+   --tokenizer_path /path/to/paligemma-3b-pt-224
 ```
 
 The code is specifically tuned on RTX 4090, CUDA 12.6, but it should work on similar platforms so long as torch and triton themselves work.

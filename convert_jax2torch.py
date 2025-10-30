@@ -197,9 +197,6 @@ def convert_weights(weights, dump_weights):
     weights['decoder_action_fused_out_proj_w'].copy_(decoder_action_fused_out_proj_w)
     weights['decoder_action_fused_out_proj_b'].copy_(decoder_action_fused_out_proj_b)
 
-def prepare_buffers(buffers, language_embeds):
-    buffers['language_embeds'].copy_(language_embeds)
-
 def load_jax_weights(jax_path: str):
     params_path = os.path.join(jax_path, "params")
     print(f"Loading jax weights from {params_path}")
@@ -264,59 +261,52 @@ if __name__ == "__main__":
     language_embeds, prompt_len = prepare_prompt(args.prompt, embedding_weight, args.tokenizer_path)
 
     weights = {
-        "vision_patch_embedding_w":           torch.zeros(14, 14, 3, 1152,        dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "vision_patch_embedding_b":           torch.zeros(1152,                   dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "vision_position_embedding":          torch.zeros(256, 1152,              dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "vision_attn_qkv_w":                  torch.zeros(27, 1152, 3 * 1152,     dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "vision_attn_qkv_b":                  torch.zeros(27, 3 * 1152,           dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "vision_attn_o_w":                    torch.zeros(27, 1152, 1152,         dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "vision_attn_o_b":                    torch.zeros(27, 1152,               dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "vision_ffn_up_w":                    torch.zeros(27, 1152, 4304,         dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "vision_ffn_up_b":                    torch.zeros(27, 4304,               dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "vision_ffn_down_w":                  torch.zeros(27, 4304, 1152,         dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "vision_ffn_down_b":                  torch.zeros(27, 1152,               dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "vision_pre_attn_norm_w":             torch.zeros(27, 1152,               dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "vision_pre_attn_norm_b":             torch.zeros(27, 1152,               dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "vision_pre_ffn_norm_w":              torch.zeros(27, 1152,               dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "vision_pre_ffn_norm_b":              torch.zeros(27, 1152,               dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "vision_final_norm_w":                torch.zeros(1152,                   dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "vision_final_norm_b":                torch.zeros(1152,                   dtype = torch.bfloat16, device = "cpu") * 0.01,
+        "vision_patch_embedding_w":           torch.zeros(14, 14, 3, 1152,        dtype = torch.bfloat16, device = "cpu"),
+        "vision_patch_embedding_b":           torch.zeros(1152,                   dtype = torch.bfloat16, device = "cpu"),
+        "vision_position_embedding":          torch.zeros(256, 1152,              dtype = torch.bfloat16, device = "cpu"),
+        "vision_attn_qkv_w":                  torch.zeros(27, 1152, 3 * 1152,     dtype = torch.bfloat16, device = "cpu"),
+        "vision_attn_qkv_b":                  torch.zeros(27, 3 * 1152,           dtype = torch.bfloat16, device = "cpu"),
+        "vision_attn_o_w":                    torch.zeros(27, 1152, 1152,         dtype = torch.bfloat16, device = "cpu"),
+        "vision_attn_o_b":                    torch.zeros(27, 1152,               dtype = torch.bfloat16, device = "cpu"),
+        "vision_ffn_up_w":                    torch.zeros(27, 1152, 4304,         dtype = torch.bfloat16, device = "cpu"),
+        "vision_ffn_up_b":                    torch.zeros(27, 4304,               dtype = torch.bfloat16, device = "cpu"),
+        "vision_ffn_down_w":                  torch.zeros(27, 4304, 1152,         dtype = torch.bfloat16, device = "cpu"),
+        "vision_ffn_down_b":                  torch.zeros(27, 1152,               dtype = torch.bfloat16, device = "cpu"),
+        "vision_pre_attn_norm_w":             torch.zeros(27, 1152,               dtype = torch.bfloat16, device = "cpu"),
+        "vision_pre_attn_norm_b":             torch.zeros(27, 1152,               dtype = torch.bfloat16, device = "cpu"),
+        "vision_pre_ffn_norm_w":              torch.zeros(27, 1152,               dtype = torch.bfloat16, device = "cpu"),
+        "vision_pre_ffn_norm_b":              torch.zeros(27, 1152,               dtype = torch.bfloat16, device = "cpu"),
+        "vision_final_norm_w":                torch.zeros(1152,                   dtype = torch.bfloat16, device = "cpu"),
+        "vision_final_norm_b":                torch.zeros(1152,                   dtype = torch.bfloat16, device = "cpu"),
 
-        "encoder_multi_modal_projector_w":    torch.zeros(1152, 2048,             dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "encoder_multi_modal_projector_b":    torch.zeros(2048,                   dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "encoder_attn_qkv_w":                 torch.zeros(18, 2048, 2560,         dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "encoder_attn_o_w":                   torch.zeros(18, 2048, 2048,         dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "encoder_ffn_gate_w":                 torch.zeros(18, 2048, 16384,        dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "encoder_ffn_up_w":                   torch.zeros(18, 2048, 16384,        dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "encoder_ffn_down_w":                 torch.zeros(18, 16384, 2048,        dtype = torch.bfloat16, device = "cpu") * 0.01,
+        "encoder_multi_modal_projector_w":    torch.zeros(1152, 2048,             dtype = torch.bfloat16, device = "cpu"),
+        "encoder_multi_modal_projector_b":    torch.zeros(2048,                   dtype = torch.bfloat16, device = "cpu"),
+        "encoder_attn_qkv_w":                 torch.zeros(18, 2048, 2560,         dtype = torch.bfloat16, device = "cpu"),
+        "encoder_attn_o_w":                   torch.zeros(18, 2048, 2048,         dtype = torch.bfloat16, device = "cpu"),
+        "encoder_ffn_gate_w":                 torch.zeros(18, 2048, 16384,        dtype = torch.bfloat16, device = "cpu"),
+        "encoder_ffn_up_w":                   torch.zeros(18, 2048, 16384,        dtype = torch.bfloat16, device = "cpu"),
+        "encoder_ffn_down_w":                 torch.zeros(18, 16384, 2048,        dtype = torch.bfloat16, device = "cpu"),
 
-        "decoder_state_in_proj_w":            torch.zeros(32, 1024,               dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "decoder_state_in_proj_b":            torch.zeros(1024,                   dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "decoder_action_fused_in_proj_w":     torch.zeros(32, 1024,               dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "decoder_action_fused_time_biases":   torch.zeros(10, 1024,               dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "decoder_action_mlp_w":               torch.zeros(1024, 1024,             dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "decoder_action_mlp_b":               torch.zeros(1024,                   dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "decoder_attn_qkv_w":                 torch.zeros(18, 1024, 2560,         dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "decoder_attn_o_w":                   torch.zeros(18, 2048, 1024,         dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "decoder_ffn_gate_w":                 torch.zeros(18, 1024, 4096,         dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "decoder_ffn_up_w":                   torch.zeros(18, 1024, 4096,         dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "decoder_ffn_down_w":                 torch.zeros(18, 4096, 1024,         dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "decoder_action_fused_out_proj_w":    torch.zeros(1024, 32,               dtype = torch.bfloat16, device = "cpu") * 0.01,
-        "decoder_action_fused_out_proj_b":    torch.zeros(32,                     dtype = torch.bfloat16, device = "cpu") * 0.01,
-    }
-    buffers = {
-        "language_embeds": torch.zeros(prompt_len, 2048, dtype = torch.bfloat16, device = "cpu") * 0.01,
+        "decoder_state_in_proj_w":            torch.zeros(32, 1024,               dtype = torch.bfloat16, device = "cpu"),
+        "decoder_state_in_proj_b":            torch.zeros(1024,                   dtype = torch.bfloat16, device = "cpu"),
+        "decoder_action_fused_in_proj_w":     torch.zeros(32, 1024,               dtype = torch.bfloat16, device = "cpu"),
+        "decoder_action_fused_time_biases":   torch.zeros(10, 1024,               dtype = torch.bfloat16, device = "cpu"),
+        "decoder_action_mlp_w":               torch.zeros(1024, 1024,             dtype = torch.bfloat16, device = "cpu"),
+        "decoder_action_mlp_b":               torch.zeros(1024,                   dtype = torch.bfloat16, device = "cpu"),
+        "decoder_attn_qkv_w":                 torch.zeros(18, 1024, 2560,         dtype = torch.bfloat16, device = "cpu"),
+        "decoder_attn_o_w":                   torch.zeros(18, 2048, 1024,         dtype = torch.bfloat16, device = "cpu"),
+        "decoder_ffn_gate_w":                 torch.zeros(18, 1024, 4096,         dtype = torch.bfloat16, device = "cpu"),
+        "decoder_ffn_up_w":                   torch.zeros(18, 1024, 4096,         dtype = torch.bfloat16, device = "cpu"),
+        "decoder_ffn_down_w":                 torch.zeros(18, 4096, 1024,         dtype = torch.bfloat16, device = "cpu"),
+        "decoder_action_fused_out_proj_w":    torch.zeros(1024, 32,               dtype = torch.bfloat16, device = "cpu"),
+        "decoder_action_fused_out_proj_b":    torch.zeros(32,                     dtype = torch.bfloat16, device = "cpu"),
+        "language_embeds":                    torch.zeros(prompt_len, 2048, dtype = torch.bfloat16, device = "cpu"),
     }
     
     convert_weights(weights, dump_weights)
-    prepare_buffers(buffers, language_embeds)
-    
-    result_dict = {
-        'weights': weights,
-        'buffers': buffers
-    }
+    weights['language_embeds'].copy_(language_embeds)
 
     with open(args.output, 'wb') as f:
-        pickle.dump(result_dict, f)
+        pickle.dump(weights, f)
     print(f"Saved to {args.output}")
 

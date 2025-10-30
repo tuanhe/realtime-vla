@@ -14,12 +14,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     infer = Pi0Inference({
-        'weights':{},
-        'buffers':{
-            'language_embeds' : torch.randn(args.prompt_len, 2048, dtype = torch.bfloat16),
-        }
+        'language_embeds' : torch.randn(args.prompt_len, 2048, dtype = torch.bfloat16),
     }, num_views=args.num_views, chunk_size=args.chunk_size)
-
+   
     input_image = torch.randn(args.num_views, 224, 224, 3, dtype = torch.bfloat16).cuda()
     input_state = torch.randn(32, dtype = torch.bfloat16).cuda()
     input_noise = torch.randn(args.chunk_size, 32, dtype = torch.bfloat16).cuda()

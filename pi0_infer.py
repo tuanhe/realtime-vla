@@ -1238,49 +1238,51 @@ class Pi0Inference:
     def __init__(self, checkpoint, num_views, chunk_size):
         self.num_views = num_views
         self.chunk_size = chunk_size
-        encoded_prompt = checkpoint['buffers']['language_embeds']
+        encoded_prompt = checkpoint['language_embeds']
         self.prompt_len = len(encoded_prompt)
 
         self.weights = {
-            "vision_patch_embedding_w":           torch.empty(14, 14, 3, 1152,        dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "vision_patch_embedding_b":           torch.empty(1152,                   dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "vision_position_embedding":          torch.empty(256, 1152,              dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "vision_attn_qkv_w":                  torch.empty(27, 1152, 3 * 1152,     dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "vision_attn_qkv_b":                  torch.empty(27, 3 * 1152,           dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "vision_attn_o_w":                    torch.empty(27, 1152, 1152,         dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "vision_attn_o_b":                    torch.empty(27, 1152,               dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "vision_ffn_up_w":                    torch.empty(27, 1152, 4304,         dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "vision_ffn_up_b":                    torch.empty(27, 4304,               dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "vision_ffn_down_w":                  torch.empty(27, 4304, 1152,         dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "vision_ffn_down_b":                  torch.empty(27, 1152,               dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "vision_pre_attn_norm_w":             torch.empty(27, 1152,               dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "vision_pre_attn_norm_b":             torch.empty(27, 1152,               dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "vision_pre_ffn_norm_w":              torch.empty(27, 1152,               dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "vision_pre_ffn_norm_b":              torch.empty(27, 1152,               dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "vision_final_norm_w":                torch.empty(1152,                   dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "vision_final_norm_b":                torch.empty(1152,                   dtype = torch.bfloat16, device = "cuda") * 0.01,
+            "vision_patch_embedding_w":           torch.empty(14, 14, 3, 1152,        dtype = torch.bfloat16, device = "cuda"),
+            "vision_patch_embedding_b":           torch.empty(1152,                   dtype = torch.bfloat16, device = "cuda"),
+            "vision_position_embedding":          torch.empty(256, 1152,              dtype = torch.bfloat16, device = "cuda"),
+            "vision_attn_qkv_w":                  torch.empty(27, 1152, 3 * 1152,     dtype = torch.bfloat16, device = "cuda"),
+            "vision_attn_qkv_b":                  torch.empty(27, 3 * 1152,           dtype = torch.bfloat16, device = "cuda"),
+            "vision_attn_o_w":                    torch.empty(27, 1152, 1152,         dtype = torch.bfloat16, device = "cuda"),
+            "vision_attn_o_b":                    torch.empty(27, 1152,               dtype = torch.bfloat16, device = "cuda"),
+            "vision_ffn_up_w":                    torch.empty(27, 1152, 4304,         dtype = torch.bfloat16, device = "cuda"),
+            "vision_ffn_up_b":                    torch.empty(27, 4304,               dtype = torch.bfloat16, device = "cuda"),
+            "vision_ffn_down_w":                  torch.empty(27, 4304, 1152,         dtype = torch.bfloat16, device = "cuda"),
+            "vision_ffn_down_b":                  torch.empty(27, 1152,               dtype = torch.bfloat16, device = "cuda"),
+            "vision_pre_attn_norm_w":             torch.empty(27, 1152,               dtype = torch.bfloat16, device = "cuda"),
+            "vision_pre_attn_norm_b":             torch.empty(27, 1152,               dtype = torch.bfloat16, device = "cuda"),
+            "vision_pre_ffn_norm_w":              torch.empty(27, 1152,               dtype = torch.bfloat16, device = "cuda"),
+            "vision_pre_ffn_norm_b":              torch.empty(27, 1152,               dtype = torch.bfloat16, device = "cuda"),
+            "vision_final_norm_w":                torch.empty(1152,                   dtype = torch.bfloat16, device = "cuda"),
+            "vision_final_norm_b":                torch.empty(1152,                   dtype = torch.bfloat16, device = "cuda"),
 
-            "encoder_multi_modal_projector_w":    torch.empty(1152, 2048,             dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "encoder_multi_modal_projector_b":    torch.empty(2048,                   dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "encoder_attn_qkv_w":                 torch.empty(18, 2048, 2560,         dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "encoder_attn_o_w":                   torch.empty(18, 2048, 2048,         dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "encoder_ffn_gate_w":                 torch.empty(18, 2048, 16384,        dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "encoder_ffn_up_w":                   torch.empty(18, 2048, 16384,        dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "encoder_ffn_down_w":                 torch.empty(18, 16384, 2048,        dtype = torch.bfloat16, device = "cuda") * 0.01,
+            "encoder_multi_modal_projector_w":    torch.empty(1152, 2048,             dtype = torch.bfloat16, device = "cuda"),
+            "encoder_multi_modal_projector_b":    torch.empty(2048,                   dtype = torch.bfloat16, device = "cuda"),
+            "encoder_attn_qkv_w":                 torch.empty(18, 2048, 2560,         dtype = torch.bfloat16, device = "cuda"),
+            "encoder_attn_o_w":                   torch.empty(18, 2048, 2048,         dtype = torch.bfloat16, device = "cuda"),
+            "encoder_ffn_gate_w":                 torch.empty(18, 2048, 16384,        dtype = torch.bfloat16, device = "cuda"),
+            "encoder_ffn_up_w":                   torch.empty(18, 2048, 16384,        dtype = torch.bfloat16, device = "cuda"),
+            "encoder_ffn_down_w":                 torch.empty(18, 16384, 2048,        dtype = torch.bfloat16, device = "cuda"),
 
-            "decoder_state_in_proj_w":            torch.empty(32, 1024,               dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "decoder_state_in_proj_b":            torch.empty(1024,                   dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "decoder_action_fused_in_proj_w":     torch.empty(32, 1024,               dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "decoder_action_fused_time_biases":   torch.empty(10, 1024,               dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "decoder_action_mlp_w":               torch.empty(1024, 1024,             dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "decoder_action_mlp_b":               torch.empty(1024,                   dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "decoder_attn_qkv_w":                 torch.empty(18, 1024, 2560,         dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "decoder_attn_o_w":                   torch.empty(18, 2048, 1024,         dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "decoder_ffn_gate_w":                 torch.empty(18, 1024, 4096,         dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "decoder_ffn_up_w":                   torch.empty(18, 1024, 4096,         dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "decoder_ffn_down_w":                 torch.empty(18, 4096, 1024,         dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "decoder_action_fused_out_proj_w":    torch.empty(1024, 32,               dtype = torch.bfloat16, device = "cuda") * 0.01,
-            "decoder_action_fused_out_proj_b":    torch.empty(32,                     dtype = torch.bfloat16, device = "cuda") * 0.01,
+            "decoder_state_in_proj_w":            torch.empty(32, 1024,               dtype = torch.bfloat16, device = "cuda"),
+            "decoder_state_in_proj_b":            torch.empty(1024,                   dtype = torch.bfloat16, device = "cuda"),
+            "decoder_action_fused_in_proj_w":     torch.empty(32, 1024,               dtype = torch.bfloat16, device = "cuda"),
+            "decoder_action_fused_time_biases":   torch.empty(10, 1024,               dtype = torch.bfloat16, device = "cuda"),
+            "decoder_action_mlp_w":               torch.empty(1024, 1024,             dtype = torch.bfloat16, device = "cuda"),
+            "decoder_action_mlp_b":               torch.empty(1024,                   dtype = torch.bfloat16, device = "cuda"),
+            "decoder_attn_qkv_w":                 torch.empty(18, 1024, 2560,         dtype = torch.bfloat16, device = "cuda"),
+            "decoder_attn_o_w":                   torch.empty(18, 2048, 1024,         dtype = torch.bfloat16, device = "cuda"),
+            "decoder_ffn_gate_w":                 torch.empty(18, 1024, 4096,         dtype = torch.bfloat16, device = "cuda"),
+            "decoder_ffn_up_w":                   torch.empty(18, 1024, 4096,         dtype = torch.bfloat16, device = "cuda"),
+            "decoder_ffn_down_w":                 torch.empty(18, 4096, 1024,         dtype = torch.bfloat16, device = "cuda"),
+            "decoder_action_fused_out_proj_w":    torch.empty(1024, 32,               dtype = torch.bfloat16, device = "cuda"),
+            "decoder_action_fused_out_proj_b":    torch.empty(32,                     dtype = torch.bfloat16, device = "cuda"),
+
+            "language_embeds": torch.empty(self.prompt_len, 2048,  dtype = torch.bfloat16, device = "cuda"),
         }
 
         encoder_seq_len = num_views * 256 + self.prompt_len
@@ -1330,15 +1332,14 @@ class Pi0Inference:
             torch.cat([k_cos[:, :, None], k_sin[:, :, None]], 2).view(-1, 256)
         )
 
-        self.buffers['encoder_x'][num_views * 256:].copy_(encoded_prompt)
-
-        for k, v in checkpoint['weights'].items():
+        for k, v in checkpoint.items():
             self.weights[k].copy_(v)
 
         self.infer_graph = torch.cuda.CUDAGraph()
         self.record_infer_graph()
     
     def record_run(self):
+        self.buffers['encoder_x'][self.num_views * 256:].copy_(self.weights['language_embeds'])
         pi0_model(self.weights, self.buffers, self.num_views)
     
     def record_infer_graph(self):
