@@ -1,8 +1,6 @@
 import torch
 import triton
 import triton.language as tl
-import time
-import numpy as np
 
 @triton.jit
 def matmul_small_bias_res(inp_ptr, weight_ptr, out_ptr, bias_ptr, res_ptr, seq_len : tl.constexpr, features : tl.constexpr, hidden : tl.constexpr,
