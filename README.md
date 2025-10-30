@@ -2,8 +2,8 @@
 
 This project provides accelerated inference kernels of the Pi0 model from [OpenPI](https://github.com/Physical-Intelligence/openpi) project.
 
-![Framework](./images/framework.png)
-*The full streaming inference framework. AE is the action expert in Pi0*
+![Real-time VLA Inference Demo](./images/realdemo.png)
+*Real-world demonstration: catching a falling pen with sub-200ms end-to-end latency using 30 FPS inference. (From "[Running VLAs at Real-time Speed]()")*
 
 
 The inference time for one set of observations (10 flow steps, 63 chunk size, empty prompt) on RTX 4090 (max boosted clock 2.79GHz) is as follows:
@@ -19,9 +19,6 @@ For more realistic settings (prompt length 20 tokens, 50 chunk size), we have
 
 To match camera speeds, you should consider using **30fps** for one or two views , and **25 fps** for three views.
 
-
-![Real-time VLA Inference Demo](./images/realdemo.png)
-*Real-world demonstration: catching a falling pen with sub-200ms end-to-end latency using 30 FPS inference.*
 
 ## How to Use
 
@@ -55,6 +52,14 @@ You can check the inference time on you local machine by
 ```bash
 python3 benchmark.py --num_views 2 --prompt_len 0 --chunk_size 63
 ```
+
+## Model Architecture
+
+The model consists of a vision encoder, an LLM, and an action expert. All components can be decomposed into a series of matrix multiplications(matmuls) and associated scalar operations. The computation graph ultimately simplifies to 24 GEMM-like operations with associated scalar operators. 
+
+
+![Model Architecture](./images/matflow.png)
+
 
 
 ## Acknowledgements
