@@ -1170,7 +1170,7 @@ def transformer_decoder(weights, buffers, encoder_seq_len):
         weights['decoder_state_in_proj_b'],
         buffers['decoder_x'][:1]
     )
-    for step in range(16):
+    for step in range(10):
         matmul_k_32_1024_bias_silu(
             buffers['diffusion_noise'],
             weights['decoder_action_fused_in_proj_w'],
@@ -1342,7 +1342,7 @@ class Pi0Inference:
         self.record_infer_graph()
     
     def record_run(self):
-        pi0_model(self.weights, self.buffers)
+        pi0_model(self.weights, self.buffers, self.num_views)
     
     def record_infer_graph(self):
         for i in range(3):

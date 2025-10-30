@@ -38,7 +38,7 @@ The code is specifically tuned on RTX 4090, CUDA 12.6, but it should work on sim
 
 You can check the inference time on you local machine by
 ```bash
-python3 benchmark.py --num_views 2 --prompt_len 10
+python3 benchmark.py --num_views 2 --prompt_len 10 --chunk_size 50
 ```
 
 
