@@ -1331,9 +1331,7 @@ class Pi0Inference:
             torch.cat([k_cos[:, :, None], k_sin[:, :, None]], 2).view(-1, 256)
         )
 
-        self.buffers['encoder_x'][num_views * 256:].copy_(
-            torch.tensor(encoded_prompt, dtype = torch.bfloat16, device = "cuda")
-        )
+        self.buffers['encoder_x'][num_views * 256:].copy_(encoded_prompt)
 
         for k, v in checkpoint['weights'].items():
             self.weights[k].copy_(v)

@@ -2,11 +2,18 @@
 
 This project provides accelerated inference kernels of the Pi0 model from [OpenPI](https://github.com/Physical-Intelligence/openpi) project.
 
-The inference time for one set of observations (10 flow steps, empty prompt) on RTX 4090 (max boosted clock 2.79GHz) is as follows:
+The inference time for one set of observations (10 flow steps, 63 chunk size, empty prompt) on RTX 4090 (max boosted clock 2.79GHz) is as follows:
 
 | 1 view | 2 views | 3 views |
 |---|---|---|
 | 20.0ms | 27.3ms | 36.8ms |
+
+For more realistic settings (prompt length 20 tokens, 50 chunk size), we have
+| 1 view | 2 views | 3 views |
+|---|---|---|
+| 23.6ms | 32.9ms | 39.2ms |
+
+To match camera speeds, you should consider using **30fps** for one or two views , and **25 fps** for three views.
 
 ## How to Use
 
