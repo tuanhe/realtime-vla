@@ -1,4 +1,4 @@
-# Running VLA in Real Time
+# Running VLAs at Real-time Speed
 
 This project provides accelerated inference kernels of the Pi0 model from [OpenPI](https://github.com/Physical-Intelligence/openpi) project.
 
@@ -72,7 +72,7 @@ This project is developed based on Physical Intelligence's [OpenPI](https://gith
 If you want, you can cite this work with:
 
 ```bibtex
-@article{ma2025runningvlasrealtimespeed,
+@article{ma2025rtvla,
   title={Running VLAs at Real-time Speed},
   author={Ma, Yunchao and Zhou, Yizhuang and Yang, Yunhuan and Wang, Tiancai and Fan, Haoqiang},
   journal={arXiv preprint arXiv:2510.26742},
