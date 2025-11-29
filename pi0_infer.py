@@ -1167,9 +1167,10 @@ def transformer_decoder(weights, buffers, encoder_seq_len):
         buffers['observation_state_normalized'],
         weights['decoder_state_in_proj_w'],
         weights['decoder_state_in_proj_b'],
-        buffers['decoder_x'][:1]
+        buffers['decoder_state_buf']
     )
     for step in range(10):
+        buffers['decoder_x'][:1].copy_(buffers['decoder_state_buf'])
         matmul_k_32_1024_bias_silu(
             buffers['diffusion_noise'],
             weights['decoder_action_fused_in_proj_w'],
@@ -1307,6 +1308,7 @@ class Pi0Inference:
             'decoder_rope_weights':               torch.empty(decoder_seq_len, 256,            dtype = torch.bfloat16, device = "cuda"),
             'decoder_x':                          torch.empty((decoder_seq_len, 1024),         dtype = torch.bfloat16, device = "cuda"),
             'decoder_x_buf':                      torch.empty((decoder_seq_len, 1024),         dtype =torch.bfloat16,  device = "cuda"),
+            'decoder_state_buf':                  torch.empty((1, 1024),                       dtype = torch.bfloat16, device = "cuda"),
             'decoder_norm_factor_buf':            torch.empty((decoder_seq_len,),              dtype = torch.bfloat16, device = "cuda"),
             'decoder_q_buf':                      torch.empty((decoder_seq_len * 8, 256),      dtype = torch.bfloat16, device = "cuda"),
             'decoder_attn_buf':                   torch.empty((decoder_seq_len * 8, encoder_seq_len + decoder_seq_len),  dtype = torch.bfloat16, device = "cuda"),
