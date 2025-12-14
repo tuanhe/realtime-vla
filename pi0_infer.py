@@ -1006,7 +1006,7 @@ def scaled_matmul_rope_qkv(
         
         if start_j < (num_heads + 1) * head_dim:
             x0, x1 = tl.split(accumulator.reshape(BLOCK_SIZE_M, BLOCK_SIZE_N // 2, 2))
-            x_cossin = tl.load(rope_weights_ptr + offs_i * head_dim + offs_j % head_dim)
+            x_cossin = tl.load(rope_weights_ptr + offs_i * head_dim + offs_j % head_dim, mask = offs_i < seq_len, other = 0)
             x_cos, x_sin = tl.split(x_cossin.reshape(BLOCK_SIZE_M, BLOCK_SIZE_N // 2, 2))
             x0_ = x0 * x_cos - x1 * x_sin
             x1_ = x1 * x_cos + x0 * x_sin
