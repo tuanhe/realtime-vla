@@ -1307,7 +1307,7 @@ class Pi0Inference:
             'encoder_hidden':                     torch.empty(encoder_seq_len, 16384,          dtype = torch.bfloat16, device = "cuda"),
             'decoder_rope_weights':               torch.empty(decoder_seq_len, 256,            dtype = torch.bfloat16, device = "cuda"),
             'decoder_x':                          torch.empty((decoder_seq_len, 1024),         dtype = torch.bfloat16, device = "cuda"),
-            'decoder_x_buf':                      torch.empty((decoder_seq_len, 1024),         dtype =torch.bfloat16,  device = "cuda"),
+            'decoder_x_buf':                      torch.empty((chunk_size, 1024),              dtype = torch.bfloat16, device = "cuda"),
             'decoder_state_buf':                  torch.empty((1, 1024),                       dtype = torch.bfloat16, device = "cuda"),
             'decoder_norm_factor_buf':            torch.empty((decoder_seq_len,),              dtype = torch.bfloat16, device = "cuda"),
             'decoder_q_buf':                      torch.empty((decoder_seq_len * 8, 256),      dtype = torch.bfloat16, device = "cuda"),
