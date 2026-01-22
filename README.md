@@ -30,7 +30,7 @@ To match camera speeds, you should consider using **30fps** for one or two views
 | Model / Backend | RTX 4090 (1 view) | RTX 4090 (2 views) | RTX 4090 (3 views) | RTX 5090 (1 view) | RTX 5090 (2 views) | RTX 5090 (3 views) |
 |---|---|---|---|---|---|---|
 | Pi0 Triton | 20.0ms | 27.3ms | 36.8ms | 17.6ms | 24.0ms | 31.9ms |
-| Pi05 Triton | 25.9ms | 32.9ms | 42.7ms | 23.2ms | 29.6ms | 37.3ms |
+| Pi05 Triton | 22.1ms | 29.2ms | 38.9ms | 20.1ms | 26.6ms | 34.2ms |
 
 
 ## How to Use

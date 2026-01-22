@@ -12,6 +12,7 @@ from pi0_infer import (
     matmul_n_16384_2048_res,
     rms_matmul_n_2048_16384_gate,
     matmul_small_bias,
+    matmul_small_bias_res,
     matmul_small_bias_silu,
     matmul_small_gate,
     matmul_k8_n_256,
@@ -195,15 +196,6 @@ def matmul_k_1024_2560_qkv_rope(x_normed, weight_qkv, rope_weight, Q, K, V):
 
 def adarms_norm_style_proj(x, time_emb, mod_w, mod_b, x_normed, gate, style):
     seq_len = x.shape[0]
-    matmul_small_bias[((seq_len + 31) // 32) * (3072 // 32),](
-        time_emb,mod_w,style,mod_b,
-        seq_len = seq_len,
-        features = 1024, 
-        hidden = 3072,
-        BLOCK_SIZE_N = 32,
-        BLOCK_SIZE_M = 32,
-        BLOCK_SIZE_K = 32
-    )
     adarms_norm_kernel[(seq_len,)](
         x, 
         style,
@@ -212,6 +204,47 @@ def adarms_norm_style_proj(x, time_emb, mod_w, mod_b, x_normed, gate, style):
         seq_len = seq_len, 
         features = 1024, 
         BLOCK_SIZE = 512
+    )
+def adarms_norm_style_proj_final(x, time_emb, mod_w, mod_b, x_normed, gate, style):
+    seq_len = x.shape[0]
+
+    adarms_norm_kernel[(seq_len,)](
+        x, 
+        style,
+        x_normed,
+        gate,
+        seq_len = seq_len, 
+        features = 1024, 
+        BLOCK_SIZE = 512
+    )
+
+def adarms_matmul_k_1024_32_bias_res(
+    x,
+    time_emb,
+    mod_w,
+    mod_b,
+    x_normed,
+    gate,
+    style,
+    weight,
+    bias,
+    out,
+    res,
+):
+    adarms_norm_style_proj_final(x, time_emb, mod_w, mod_b, x_normed, gate, style)
+    seq_len = x.shape[0]
+    matmul_small_bias_res[((seq_len + 15) // 16) * (32 // 16),] (
+        x_normed,
+        weight,
+        out,
+        bias,
+        res,
+        seq_len = seq_len,
+        features = 1024,
+        hidden = 32,
+        BLOCK_SIZE_N = 16,
+        BLOCK_SIZE_M = 16,
+        BLOCK_SIZE_K = 256
     )
 
 def matmul_k_2048_1024_gate(x, weight, out, gate):
@@ -384,18 +417,6 @@ def softmax_kernel_prefix_suffix(
 
 def transformer_decoder(weights, buffers, encoder_seq_len, num_steps=10):
     for step in range(num_steps):
-        matmul_1_1024_1024_bias_silu(
-            weights['decoder_time_embeds'][step].view(1, -1),
-            weights['decoder_time_mlp_in_w'],
-            weights['decoder_time_mlp_in_b'],
-            buffers['decoder_x_buf']
-        )
-        matmul_1_1024_1024_bias_silu(
-            buffers['decoder_x_buf'],
-            weights['decoder_time_mlp_out_w'],
-            weights['decoder_time_mlp_out_b'],
-            buffers['decoder_time_emb']
-        )
         matmul_k_32_1024_bias(
             buffers['diffusion_noise'],
             weights['decoder_action_in_proj_w'],
@@ -406,12 +427,12 @@ def transformer_decoder(weights, buffers, encoder_seq_len, num_steps=10):
         for i in range(18):
             adarms_norm_style_proj(
                 buffers['decoder_x'],
-                buffers['decoder_time_emb'],
+                buffers['decoder_time_emb'][step],
                 weights['decoder_pre_attn_norm_mod_w'][i],
                 weights['decoder_pre_attn_norm_mod_b'][i],
                 buffers['x_normed_buf'],
                 buffers['gate_buf'],
-                buffers['decoder_style']
+                buffers['decoder_style_attn'][step, i]
             )
             matmul_k_1024_2560_qkv_rope(
                 buffers['x_normed_buf'], 
@@ -463,12 +484,12 @@ def transformer_decoder(weights, buffers, encoder_seq_len, num_steps=10):
             )
             adarms_norm_style_proj(
                 buffers['decoder_x'],
-                buffers['decoder_time_emb'],
+                buffers['decoder_time_emb'][step],
                 weights['decoder_pre_ffn_norm_mod_w'][i],
                 weights['decoder_pre_ffn_norm_mod_b'][i],
                 buffers['x_normed_buf'],
                 buffers['gate_buf'],
-                buffers['decoder_style']
+                buffers['decoder_style_ffn'][step, i]
             )
             seq_len = buffers['decoder_x'].shape[0]
             matmul_small_gate[( (seq_len + 127) // 128, (4096 + 63) // 64 )](
@@ -487,29 +508,19 @@ def transformer_decoder(weights, buffers, encoder_seq_len, num_steps=10):
                 buffers['gate_buf']
             )
 
-        seq_len = buffers['decoder_x'].shape[0]
-        adarms_norm_style_proj(
+        adarms_matmul_k_1024_32_bias_res(
             buffers['decoder_x'],
-            buffers['decoder_time_emb'],
+            buffers['decoder_time_emb'][step],
             weights['decoder_final_norm_mod_w'],
             weights['decoder_final_norm_mod_b'],
             buffers['x_normed_buf'],
             buffers['gate_buf'],
-            buffers['decoder_style']
-        )
-        matmul_small_bias[((seq_len + 15) // 16) * (32 // 16),] (
-            buffers['x_normed_buf'],
+            buffers['decoder_style_final'][step],
             weights['decoder_action_out_proj_w'],
-            buffers['decoder_action_buf'],
             weights['decoder_action_out_proj_b'],
-            seq_len = seq_len,
-            features = 1024,
-            hidden = 32,
-            BLOCK_SIZE_N = 16,
-            BLOCK_SIZE_M = 16,
-            BLOCK_SIZE_K = 256
+            buffers['diffusion_noise'],
+            buffers['diffusion_noise'],
         )
-        buffers['diffusion_noise'].add_(buffers['decoder_action_buf'], alpha= -1.0/num_steps )
 
 def pi05_model(weights, buffers, num_views, encoder_seq_len, num_steps=10):
     vision_encoder(weights, buffers, num_views)
@@ -627,8 +638,10 @@ class Pi05Inference:
             'decoder_x':                          torch.empty((decoder_seq_len, 1024),         dtype = torch.bfloat16, device = "cuda"),
             'decoder_x_buf':                      torch.empty((decoder_seq_len, 1024),         dtype=torch.bfloat16,  device = "cuda"),
             'decoder_action_buf':                 torch.empty((decoder_seq_len, 32),           dtype = torch.bfloat16, device = "cuda"),
-            'decoder_time_emb':                   torch.empty((decoder_seq_len, 1024),         dtype = torch.bfloat16, device = "cuda"),
-            'decoder_style':                      torch.empty((decoder_seq_len, 1024 * 3),         dtype = torch.bfloat16, device = "cuda"), 
+            'decoder_time_emb':                   torch.empty((10, decoder_seq_len, 1024),         dtype = torch.bfloat16, device = "cuda"),
+            'decoder_style_attn':                      torch.empty((10, 18, decoder_seq_len, 1024 * 3),         dtype = torch.bfloat16, device = "cuda"), 
+            'decoder_style_ffn':                      torch.empty((10, 18, decoder_seq_len, 1024 * 3),         dtype = torch.bfloat16, device = "cuda"), 
+            'decoder_style_final':                      torch.empty((10, decoder_seq_len, 1024 * 3),         dtype = torch.bfloat16, device = "cuda"),            
             'decoder_norm_factor_buf':            torch.empty((decoder_seq_len,),              dtype = torch.bfloat16, device = "cuda"),
             'decoder_q_buf':                      torch.empty((decoder_seq_len * 8, 256),      dtype = torch.bfloat16, device = "cuda"),
             'decoder_logits_buf':                 torch.empty((decoder_seq_len * 8, encoder_seq_len + decoder_seq_len), dtype=torch.float32, device="cuda"),
@@ -653,7 +666,61 @@ class Pi05Inference:
         for k, v in checkpoint.items():
             if k != "embedding_weight":
                 self.weights[k].copy_(v)
+        num_steps = 10
+        self.weights['decoder_action_out_proj_w'] *= -1.0 / num_steps
+        self.weights['decoder_action_out_proj_b'] *= -1.0 / num_steps 
 
+        for step in range(num_steps):
+            matmul_1_1024_1024_bias_silu(
+                self.weights['decoder_time_embeds'][step].view(1, -1),
+                self.weights['decoder_time_mlp_in_w'],
+                self.weights['decoder_time_mlp_in_b'],
+                self.buffers['decoder_x_buf']
+            )
+            matmul_1_1024_1024_bias_silu(
+                self.buffers['decoder_x_buf'],
+                self.weights['decoder_time_mlp_out_w'],
+                self.weights['decoder_time_mlp_out_b'],
+                self.buffers['decoder_time_emb'][step]
+            )
+            for i in range(18):
+                matmul_small_bias[((decoder_seq_len + 31) // 32) * (3072 // 32),](
+                    self.buffers['decoder_time_emb'][step],
+                    self.weights['decoder_pre_attn_norm_mod_w'][i],
+                    self.buffers['decoder_style_attn'][step, i],
+                    self.weights['decoder_pre_attn_norm_mod_b'][i],
+                    seq_len = decoder_seq_len,
+                    features = 1024, 
+                    hidden = 3072,
+                    BLOCK_SIZE_N = 32,
+                    BLOCK_SIZE_M = 32,
+                    BLOCK_SIZE_K = 32
+                )
+                matmul_small_bias[((decoder_seq_len + 31) // 32) * (3072 // 32),](
+                    self.buffers['decoder_time_emb'][step],
+                    self.weights['decoder_pre_ffn_norm_mod_w'][i],
+                    self.buffers['decoder_style_ffn'][step, i],
+                    self.weights['decoder_pre_ffn_norm_mod_b'][i],
+                    seq_len = decoder_seq_len,
+                    features = 1024, 
+                    hidden = 3072,
+                    BLOCK_SIZE_N = 32,
+                    BLOCK_SIZE_M = 32,
+                    BLOCK_SIZE_K = 32
+                )
+            matmul_small_bias[((decoder_seq_len + 31) // 32) * (3072 // 32),](
+                self.buffers['decoder_time_emb'][step],
+                self.weights['decoder_final_norm_mod_w'],
+                self.buffers['decoder_style_final'][step],
+                self.weights['decoder_final_norm_mod_b'],
+                seq_len = decoder_seq_len,
+                features = 1024, 
+                hidden = 3072,
+                BLOCK_SIZE_N = 32,
+                BLOCK_SIZE_M = 32,
+                BLOCK_SIZE_K = 32
+                )
+            
         self.prompt_embedding = None
         self._prompt_embed_scale = None
         if self.discrete_state_input:
